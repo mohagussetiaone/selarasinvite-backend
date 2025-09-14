@@ -1,6 +1,8 @@
 import { User } from "@prisma/client";
 import { IUserModel } from "./interface/IUserModel";
-import prisma from "@/utils/prismaClient";
+import { createPrismaClient } from "@/utils/prismaClient";
+
+const prisma = createPrismaClient();
 
 class UserModel implements IUserModel {
   private haspassword = async (password: string): Promise<string> => {

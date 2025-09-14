@@ -1,5 +1,6 @@
 import { User } from "@prisma/client";
 import { sign, verify } from "hono/jwt";
+import * as process from "node:process";
 
 const secret = process.env.JWT_SECRET || "secret";
 const secretRefresh = process.env.JWT_SECRET_REFRESH || "secretRefresh";

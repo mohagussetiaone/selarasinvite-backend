@@ -1,4 +1,4 @@
-import prisma from "@/utils/prismaClient";
+import { createPrismaClient } from "@/utils/prismaClient";
 import { User } from "@prisma/client";
 import { afterAll, beforeAll, describe, expect, it } from "bun:test";
 import UserModel from "./UserModel";
@@ -9,6 +9,8 @@ const user = {
   email: "BfO7R@example.com",
   password: "password",
 } as User;
+
+const prisma = createPrismaClient();
 
 describe("UserModel Tests", () => {
   beforeAll(async () => {

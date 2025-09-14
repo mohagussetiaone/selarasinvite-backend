@@ -1,10 +1,12 @@
 import UserModel from "@/models/UserModel";
-import prisma from "@/utils/prismaClient";
+import { createPrismaClient } from "@/utils/prismaClient";
 import { afterAll, beforeAll, describe, expect, it } from "bun:test";
 const BASE_URL = "http://localhost:3000/api";
 
 let token = "";
 let refreshToken = "";
+
+const prisma = createPrismaClient();
 
 const dummyUser = {
   name: "John Doe",
