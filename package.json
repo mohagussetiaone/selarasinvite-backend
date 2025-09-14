@@ -7,7 +7,7 @@
     "check-types": "bun tsc --noEmit --pretty",
     "check-lint": "bunx eslint .",
     "check-format": "bunx prettier . --check",
-    "build": "bun build ./src/index.ts --outdir ./dist --target bun",
+    "build": "npx prisma generate && bun build ./src/index.ts --outdir ./dist --target bun",
     "start": "bun run ./dist/index.js",
     "prepare": "bunx husky install",
     "dev:wrangler": "wrangler dev",
