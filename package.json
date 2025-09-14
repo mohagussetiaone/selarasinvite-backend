@@ -1,0 +1,31 @@
+{
+  "name": "selarasinvite",
+  "scripts": {
+    "dev": "bun run --hot src/index.ts",
+    "fix-lint": "bunx eslint . --fix",
+    "format": "bunx prettier --write .",
+    "check-types": "bun tsc --noEmit --pretty",
+    "check-lint": "bunx eslint .",
+    "check-format": "bunx prettier . --check",
+    "build": "bun build ./src/index.ts --outdir ./dist --target bun",
+    "start": "bun run ./dist/index.js",
+    "prepare": "bunx husky install"
+  },
+  "dependencies": {
+    "@hono/zod-openapi": "^1.1.0",
+    "@scalar/express-api-reference": "^0.8.18",
+    "@scalar/hono-api-reference": "^0.9.18",
+    "hono": "^4.9.6",
+    "zod": "^4.1.8"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@typescript-eslint/eslint-plugin": "^8.43.0",
+    "@typescript-eslint/parser": "^8.43.0",
+    "eslint": "^9.35.0",
+    "globals": "^16.4.0",
+    "husky": "^9.1.7",
+    "prettier": "^3.6.2",
+    "typescript-eslint": "^8.43.0"
+  }
+}

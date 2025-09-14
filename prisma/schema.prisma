@@ -1,0 +1,629 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id            String         @id @default(cuid())
+  name          String?
+  email         String         @unique
+  password      String?
+  emailVerified DateTime?
+  image         String?
+  role          Role           @default(USER)
+  address       String?        @unique
+  phone         String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  accounts      Account[]
+  catalogs      Catalogs[]
+  invitation    Invitation[]
+  notifications Notification[]
+  reservations  Reservation[]
+  sessions      Session[]
+  transactions  Transactions[]
+}
+
+model Account {
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  user              User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  Invitation        Invitation[]
+
+  @@id([provider, providerAccountId])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  email     String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model Session {
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Transactions {
+  id         String        @id @default(uuid()) @db.Uuid
+  userId     String
+  amount     Int
+  status     PaymentStatus @default(PENDING)
+  reference  String?
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+  invitation Invitation?
+  user       User          @relation(fields: [userId], references: [id])
+}
+
+model Reservation {
+  id           String            @id @default(uuid()) @db.Uuid
+  startDate    DateTime
+  endDate      DateTime
+  price        Int
+  status       ReservationStatus @default(PENDING)
+  userId       String
+  invitationId String            @unique @db.Uuid
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  invitation   Invitation?
+  payment      Payment?
+  user         User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Payment {
+  id            String      @id @default(cuid())
+  method        String?
+  amount        Int
+  status        String      @default("UNPAID")
+  reservationId String      @unique @db.Uuid
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  reservation   Reservation @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+}
+
+model Category {
+  id        String     @id @default(uuid()) @db.Uuid
+  name      String     @unique
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  catalogs  Catalogs[]
+}
+
+model Catalogs {
+  id          String        @id @default(uuid()) @db.Uuid
+  name        String
+  description String
+  content     String
+  image       String
+  price       Int
+  withPhoto   Boolean       @default(false)
+  hexCode     String
+  slug        String
+  isPublish   Boolean       @default(false)
+  sectionType SectionType[]
+  categoryId  String?       @db.Uuid
+  userId      String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  category    Category?     @relation(fields: [categoryId], references: [id])
+  user        User?         @relation(fields: [userId], references: [id])
+  invitation  Invitation[]
+  reviews     Review[]
+}
+
+model Review {
+  id        String   @id @default(uuid()) @db.Uuid
+  content   String
+  rating    Int
+  reviewer  String?
+  catalogId String   @db.Uuid
+  catalogs  Catalogs @relation(fields: [catalogId], references: [id])
+}
+
+model Songs {
+  id           String       @id @default(uuid()) @db.Uuid
+  title        String
+  filePath     String
+  artist       String
+  source       String
+  duration     String
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  musicSection SongSection?
+}
+
+model Invitation {
+  id                       String                @id @default(uuid()) @db.Uuid
+  title                    String?
+  slug                     String?               @unique
+  userId                   String
+  catalogId                String?               @db.Uuid
+  weddingInfoId            String?               @db.Uuid
+  isCreating               String?               @default("self")
+  tagsTheme                String?
+  note                     String?
+  isActive                 Boolean               @default(false)
+  transactionId            String?               @unique @db.Uuid
+  reservationId            String?               @unique @db.Uuid
+  accountId                String?               @db.Uuid
+  accountProviderId        String?
+  accountProviderAccountId String?
+  accountProvider          String?
+  createdAt                DateTime              @default(now())
+  updatedAt                DateTime              @updatedAt
+  additional               AdditionalSection?
+  bride                    BrideSection?
+  countdown                CountdownSection?
+  cover                    CoverSection?
+  envelope                 EnvelopeSection?
+  footer                   FooterSection?
+  gallery                  GallerySection?
+  GiftSection              GiftSection?
+  guestBooks               GuestBook[]
+  home                     HomeSection?
+  InstagramSection         InstagramSection?
+  Account                  Account?              @relation(fields: [accountProvider, accountProviderAccountId], references: [provider, providerAccountId])
+  catalogs                 Catalogs?             @relation(fields: [catalogId], references: [id])
+  reservation              Reservation?          @relation(fields: [reservationId], references: [id])
+  transaction              Transactions?         @relation(fields: [transactionId], references: [id])
+  user                     User                  @relation(fields: [userId], references: [id])
+  LiveSection              LiveSection?
+  meta                     Meta?                 @relation("InvitationMeta")
+  prayer                   PrayerSection?
+  rsvps                    RSVP[]
+  rsvp                     RSVPSection?
+  schedule                 ScheduleEventSection?
+  songs                    SongSection?
+  story                    StorySection?
+  rundown                  RundownSection?
+  weddingInfo              WeddingInfo?
+}
+
+model Meta {
+  id           String     @id @default(uuid()) @db.Uuid
+  title        String
+  description  String
+  image        String
+  publicId     String?    @unique
+  invitationId String     @unique @db.Uuid
+  invitation   Invitation @relation("InvitationMeta", fields: [invitationId], references: [id])
+}
+
+model CoverSection {
+  id                  String     @id @default(uuid()) @db.Uuid
+  title               String
+  coupleName          String
+  textInvitation      String
+  textAfterGuest      String
+  imageLittle         String?
+  imageLittlePublicId String?    @unique
+  imageCover          String?
+  imageCoverPublicId  String?    @unique
+  invitationId        String     @unique @db.Uuid
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
+  invitation          Invitation @relation(fields: [invitationId], references: [id], onDelete: Cascade)
+}
+
+model WeddingInfo {
+  id           String     @id @default(uuid()) @db.Uuid
+  title        String?
+  dateWedding  String
+  brideName    String
+  groomsName   String
+  invitationId String     @unique @db.Uuid
+  invitation   Invitation @relation(fields: [invitationId], references: [id])
+}
+
+model HomeSection {
+  id                     String     @id @default(uuid()) @db.Uuid
+  coverTitle             String?
+  backgroundHome         String?
+  backgroundHomePublicId String?    @unique
+  invitationId           String     @unique @db.Uuid
+  invitation             Invitation @relation(fields: [invitationId], references: [id])
+}
+
+model CountdownSection {
+  id           String     @id @default(uuid()) @db.Uuid
+  date         DateTime
+  title        String
+  openingTitle String
+  invitationId String     @unique @db.Uuid
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  invitation   Invitation @relation(fields: [invitationId], references: [id], onDelete: Cascade)
+}
+
+model BrideSection {
+  id                String     @id @default(uuid()) @db.Uuid
+  greeting          String
+  opening           String
+  bridePosition     String
+  groomsName        String
+  groomsFullname    String
+  groomsDescription String
+  bridesName        String
+  bridesFullname    String
+  bridesDescription String
+  groomsPhoto       String?
+  bridesPhoto       String?
+  groomsPhotoId     String?    @unique
+  bridesPhotoId     String?    @unique
+  invitationId      String     @unique @db.Uuid
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+  invitation        Invitation @relation(fields: [invitationId], references: [id], onDelete: Cascade)
+}
+
+model ScheduleEventSection {
+  id           String         @id @default(uuid()) @db.Uuid
+  title        String
+  isActive     Boolean        @default(false)
+  isVisible    Boolean        @default(true)
+  invitationId String         @unique @db.Uuid
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  invitation   Invitation     @relation(fields: [invitationId], references: [id], onDelete: Cascade)
+  events       ScheduleItem[]
+}
+
+model ScheduleItem {
+  id                     String               @id @default(uuid()) @db.Uuid
+  scheduleEventSectionId String               @db.Uuid
+  date                   String
+  eventName              String
+  time                   String
+  location               String
+  linkGoogleMaps         String
+  bridePlace             String
+  createdAt              DateTime             @default(now())
+  updatedAt              DateTime             @updatedAt
+  scheduleEventSection   ScheduleEventSection @relation(fields: [scheduleEventSectionId], references: [id], onDelete: Cascade)
+}
+
+model InstagramSection {
+  id            String     @id @default(uuid()) @db.Uuid
+  instagramMen  String
+  instagramGirl String
+  isActive      Boolean    @default(false)
+  invitationId  String     @unique @db.Uuid
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  invitation    Invitation @relation(fields: [invitationId], references: [id], onDelete: Cascade)
+}
+
+model PrayerSection {
+  id           String     @id @default(uuid()) @db.Uuid
+  title        String
+  content      String
+  isActive     Boolean    @default(false)
+  invitationId String     @unique @db.Uuid
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  invitation   Invitation @relation(fields: [invitationId], references: [id], onDelete: Cascade)
+}
+
+model FooterSection {
+  id                  String     @id @default(uuid()) @db.Uuid
+  title               String     @default("")
+  opening             String     @default("")
+  closing             String     @default("")
+  closingGreeting     String     @default("")
+  backgroundClosing   String?    @default("")
+  backgroundClosingId String?    @unique
+  isActive            Boolean    @default(false)
+  invitationId        String     @unique @db.Uuid
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
+  invitation          Invitation @relation(fields: [invitationId], references: [id], onDelete: Cascade)
+}
+
+model GallerySection {
+  id           String         @id @default(uuid()) @db.Uuid
+  title        String?
+  videoUrl     String
+  isActive     Boolean        @default(false)
+  invitationId String         @unique @db.Uuid
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  images       GalleryImage[]
+  invitation   Invitation     @relation(fields: [invitationId], references: [id], onDelete: Cascade)
+}
+
+model GalleryImage {
+  id               String         @id @default(uuid()) @db.Uuid
+  url              String
+  publicId         String?        @unique
+  gallerySectionId String         @db.Uuid
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  gallerySection   GallerySection @relation(fields: [gallerySectionId], references: [id], onDelete: Cascade)
+}
+
+model SongSection {
+  id           String     @id @default(uuid()) @db.Uuid
+  songId       String?    @unique @db.Uuid
+  invitationId String     @unique @db.Uuid
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  invitation   Invitation @relation(fields: [invitationId], references: [id], onDelete: Cascade)
+  song         Songs?     @relation(fields: [songId], references: [id])
+}
+
+model EnvelopeSection {
+  id           String         @id @default(uuid()) @db.Uuid
+  opening      String
+  isActive     Boolean        @default(false)
+  invitationId String         @unique @db.Uuid
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  envelopeItem EnvelopeItem[]
+  invitation   Invitation     @relation(fields: [invitationId], references: [id], onDelete: Cascade)
+}
+
+model EnvelopeItem {
+  id                String          @id @default(uuid()) @db.Uuid
+  bankName          String
+  ownerAccount      String
+  numberAccount     String
+  envelopeSectionId String          @db.Uuid
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  envelopeSection   EnvelopeSection @relation(fields: [envelopeSectionId], references: [id], onDelete: Cascade)
+}
+
+model GiftSection {
+  id           String     @id @default(uuid()) @db.Uuid
+  opening      String
+  isActive     Boolean    @default(false)
+  invitationId String     @unique @db.Uuid
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  giftItem     GiftItem[]
+  invitation   Invitation @relation(fields: [invitationId], references: [id], onDelete: Cascade)
+}
+
+model GiftItem {
+  id             String      @id @default(uuid()) @db.Uuid
+  receiptName    String
+  receiptAddress String
+  giftSectionId  String      @db.Uuid
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  giftSection    GiftSection @relation(fields: [giftSectionId], references: [id], onDelete: Cascade)
+}
+
+model LiveSection {
+  id           String     @id @default(uuid()) @db.Uuid
+  mediaLive    String
+  isActive     Boolean    @default(false)
+  invitationId String     @unique @db.Uuid
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  liveItem     LiveItem[]
+  invitation   Invitation @relation(fields: [invitationId], references: [id], onDelete: Cascade)
+}
+
+model LiveItem {
+  id            String      @id @default(uuid()) @db.Uuid
+  urlLive       String
+  liveSectionId String      @db.Uuid
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  liveSection   LiveSection @relation(fields: [liveSectionId], references: [id], onDelete: Cascade)
+}
+
+model StorySection {
+  id           String      @id @default(uuid()) @db.Uuid
+  title        String
+  isActive     Boolean     @default(false)
+  isVisible    Boolean     @default(true)
+  invitationId String      @unique @db.Uuid
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  storyItem    StoryItem[]
+  invitation   Invitation  @relation(fields: [invitationId], references: [id], onDelete: Cascade)
+}
+
+model StoryItem {
+  id             String       @id @default(uuid()) @db.Uuid
+  title          String
+  date           String
+  content        String
+  image          String
+  publicId       String?      @unique
+  storySectionId String       @db.Uuid
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  storySection   StorySection @relation(fields: [storySectionId], references: [id], onDelete: Cascade)
+}
+
+model RundownSection {
+  id           String        @id @default(uuid()) @db.Uuid
+  isActive     Boolean       @default(false)
+  invitationId String        @unique @db.Uuid
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  invitation   Invitation    @relation(fields: [invitationId], references: [id], onDelete: Cascade)
+  rundownItem  RundownItem[]
+}
+
+model RundownItem {
+  id               String         @id @default(uuid()) @db.Uuid
+  title            String
+  subTitle         String
+  date             String
+  time             String
+  description      String
+  rundownSectionId String         @db.Uuid
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  susunanSection   RundownSection @relation(fields: [rundownSectionId], references: [id], onDelete: Cascade)
+}
+
+model TemplateGuestMessage {
+  id         String      @id @default(uuid()) @db.Uuid
+  key        String      @unique
+  title      String
+  content    String
+  guestBooks GuestBook[]
+}
+
+model GuestBook {
+  id              String                @id @default(uuid()) @db.Uuid
+  invitationId    String                @db.Uuid
+  name            String
+  message         String
+  templateGuestId String?               @db.Uuid
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+  invitation      Invitation            @relation(fields: [invitationId], references: [id], onDelete: Cascade)
+  templateGuest   TemplateGuestMessage? @relation(fields: [templateGuestId], references: [id])
+}
+
+model RSVP {
+  id            String     @id @default(uuid()) @db.Uuid
+  invitationId  String     @db.Uuid
+  name          String
+  email         String?
+  presentStatus RSVPStatus @default(NOT_ATTENDING)
+  guestCount    Int
+  note          String?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  invitation    Invitation @relation(fields: [invitationId], references: [id])
+}
+
+model RSVPSection {
+  id           String     @id @default(uuid()) @db.Uuid
+  title        String
+  description  String?
+  isActive     Boolean    @default(false)
+  invitationId String     @unique @db.Uuid
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  invitation   Invitation @relation(fields: [invitationId], references: [id], onDelete: Cascade)
+}
+
+model AdditionalSection {
+  id             String     @id @default(uuid()) @db.Uuid
+  title          String     @default("")
+  textAdditional String     @default("")
+  isActive       Boolean    @default(false)
+  invitationId   String     @unique @db.Uuid
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+  invitation     Invitation @relation(fields: [invitationId], references: [id], onDelete: Cascade)
+}
+
+model Company {
+  id          String   @id @default(uuid())
+  name        String
+  tagline     String?
+  description String?
+  logo        String?
+  email       String
+  phone       String
+  address     String?
+  whatsapp    String?
+  instagram   String?
+  twitter     String?
+  facebook    String?
+  tiktok      String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model FAQ {
+  id       String @id @default(uuid())
+  question String
+  answer   String
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String?
+  audience  Role?
+  type      String
+  message   String
+  metadata  Json?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  user      User?    @relation(fields: [userId], references: [id])
+
+  @@index([userId, isRead])
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
+enum ReservationStatus {
+  PENDING
+  ACTIVE
+  FINISHED
+  CANCELLED
+}
+
+enum SectionType {
+  META
+  GENERAL
+  COVER
+  HOME
+  COUNTDOWN
+  BRIDE
+  EVENT
+  INSTAGRAM
+  PRAYER
+  FOOTER
+  GALLERY
+  MUSIC
+  ENVELOPE
+  GIFT
+  LIVE
+  STORY
+  RUNDOWN
+  /// tidak include di bagian section namun ada pada main menu
+  GUEST_BOOK
+  /// tidak include di bagian section namun ada pada main menu
+  RSVP
+  THEME
+  ADDITIONAL_INFO
+}
+
+enum RSVPStatus {
+  ATTENDING
+  NOT_ATTENDING
+  TENTATIVE
+}
