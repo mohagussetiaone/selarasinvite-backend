@@ -1,18 +1,15 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
-import UserRoute from "@/routes/UserRoute";
-// import Log from "@/utils/Logger";
-import { Scalar } from "@scalar/hono-api-reference";
+import { handle } from "hono/vercel"; // Pastikan mengimpor handle dari hono/vercel
 import { csrf } from "hono/csrf";
-// import { customCSRF } from "./middleware/csrf";
 import { rateLimit } from "@/middleware/rate-limiting";
-import { openAPIDocument } from "./openapi";
+import UserRoute from "@/routes/UserRoute";
 
 interface Env {
   ENVIRONMENT?: string;
 }
 
-const app = new Hono<{ Bindings: Env }>();
+const app = new Hono<{ Bindings: Env }>().basePath("/api");
 
 // Daftar domain yang diizinkan
 const allowedOrigins = [
@@ -28,33 +25,29 @@ const originValidator = (origin: string | undefined) => {
   return false;
 };
 
+// Middleware CORS harus dipasang pertama
 app.use(
+  "*",
+  cors({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    origin: originValidator as any,
+    allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowHeaders: ["Content-Type", "Authorization", "X-CSRF-Token"],
+    credentials: true,
+  }),
+);
+
+// Middleware CSRF
+app.use(
+  "*",
   csrf({
     origin: originValidator,
   }),
 );
 
-// PASANG CORS DULU
-app.use("*", cors());
-
-// Endpoint test
-app.get("/api/test", (c) => {
-  return c.json({ message: "Test endpoint for CSRF" });
-});
-
-app.post("/api/test-endpoint", async (c) => {
-  return c.json({
-    message: "POST request successful",
-    data: await c.req.json(),
-  });
-});
-
-app.use("/api/test-endpoint", csrf({ origin: originValidator }));
-app.use("/api/*", csrf({ origin: originValidator }));
-
-// Middleware lainnya
+// Middleware Rate Limiting
 app.use(
-  "/api/*",
+  "*",
   rateLimit({
     windowMs: 60000,
     max: 100,
@@ -62,36 +55,36 @@ app.use(
   }),
 );
 
-app.route("/api", UserRoute);
-app.get("/api/test-rate-limit", (c) => {
+// Endpoint test
+app.get("/test", (c) => {
+  return c.json({ message: "Test endpoint for CSRF" });
+});
+
+app.post("/test-endpoint", async (c) => {
   return c.json({
-    message: "Test endpoint for rate limiting",
-    timestamp: new Date().toISOString(),
+    message: "POST request successful",
+    data: await c.req.json(),
   });
 });
 
-app.get(
-  "/docs",
-  Scalar(() => ({
-    title: "Wedding Invitation API Documentation",
-    theme: "purple",
-    spec: {
-      url: "/doc",
-    },
-  })),
-);
+// Route API
+app.route("/", UserRoute);
 
-app.get("/doc", (c) => c.json(openAPIDocument));
-
-app.onError((err, c) => {
-  // Log.error(
-  //   "Unhandled error " +
-  //     {
-  //       error: err.message,
-  //       stack: err.stack,
-  //     },
-  // );
-  return c.text("Internal Server Error", 500);
+// Health check endpoint
+app.get("/health", (c) => {
+  return c.json({ status: "OK", timestamp: new Date().toISOString() });
 });
 
-export default app;
+// Error handling
+app.onError((err, c) => {
+  console.error("Unhandled error:", err);
+  return c.json({ error: "Internal Server Error" }, 500);
+});
+
+// Not found handler
+app.notFound((c) => {
+  return c.json({ error: "Route not found" }, 404);
+});
+
+// Export untuk Vercel
+export default handle(app);
