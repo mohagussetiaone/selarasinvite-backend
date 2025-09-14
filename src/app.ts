@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import UserRoute from "@/routes/UserRoute";
-import Log from "@/utils/Logger";
+// import Log from "@/utils/Logger";
 import { Scalar } from "@scalar/hono-api-reference";
 import { csrf } from "hono/csrf";
 // import { customCSRF } from "./middleware/csrf";
@@ -84,13 +84,13 @@ app.get(
 app.get("/doc", (c) => c.json(openAPIDocument));
 
 app.onError((err, c) => {
-  Log.error(
-    "Unhandled error " +
-      {
-        error: err.message,
-        stack: err.stack,
-      },
-  );
+  // Log.error(
+  //   "Unhandled error " +
+  //     {
+  //       error: err.message,
+  //       stack: err.stack,
+  //     },
+  // );
   return c.text("Internal Server Error", 500);
 });
 

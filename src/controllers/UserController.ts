@@ -1,7 +1,7 @@
 import { User } from "@prisma/client";
 import UserModel from "@/models/UserModel";
 import { Context } from "hono";
-import Log from "@/utils/Logger";
+// import Log from "@/utils/Logger";
 import {
   generateAccessToken,
   generateRefreshToken,
@@ -34,7 +34,7 @@ class UserController {
         201,
       );
     } catch (error) {
-      Log.error("Error: ./controllers/UserController.createUser" + error);
+      // Log.error("Error: ./controllers/UserController.createUser" + error);
       if (error instanceof Error) {
         let message = error.message;
         try {
@@ -86,7 +86,7 @@ class UserController {
         200,
       );
     } catch (error) {
-      Log.error("Error: ./controllers/UserController.verifyUser" + error);
+      // Log.error("Error: ./controllers/UserController.verifyUser" + error);
       if (error instanceof Error) {
         let message = error.message;
         try {
@@ -168,7 +168,7 @@ class UserController {
         200,
       );
     } catch (error) {
-      Log.error("Error: ./controllers/UserController.updateUser" + error);
+      // Log.error("Error: ./controllers/UserController.updateUser" + error);
       if (error instanceof Error) {
         let message = error.message;
         try {
@@ -188,7 +188,7 @@ class UserController {
       const users = await UserModel.findAll();
       return c.json({ message: "Users found successfully", data: users }, 200);
     } catch (error) {
-      Log.error("Error: ./controllers/UserController.getUsers" + error);
+      // Log.error("Error: ./controllers/UserController.getUsers" + error);
       if (error instanceof Error) {
         let message = error.message;
         try {
@@ -212,7 +212,7 @@ class UserController {
       }
       return c.json({ message: "User found successfully", data: user }, 200);
     } catch (error) {
-      Log.error("Error: ./controllers/UserController.getUser" + error);
+      // Log.error("Error: ./controllers/UserController.getUser" + error);
       if (error instanceof Error) {
         let message = error.message;
         try {
@@ -240,7 +240,7 @@ class UserController {
         200,
       );
     } catch (error) {
-      Log.error("Error: ./controllers/UserController.deleteUser" + error);
+      // Log.error("Error: ./controllers/UserController.deleteUser" + error);
       if (error instanceof Error) {
         let message = error.message;
         try {

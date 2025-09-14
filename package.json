@@ -9,10 +9,17 @@
     "check-format": "bunx prettier . --check",
     "build": "bun build ./src/index.ts --outdir ./dist --target bun",
     "start": "bun run ./dist/index.js",
-    "prepare": "bunx husky install"
+    "prepare": "bunx husky install",
+    "dev:wrangler": "wrangler dev",
+    "deploy": "bun run build && wrangler deploy",
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "db:studio": "prisma studio",
+    "build:wrangler": "prisma generate && bun build ./src/index.ts --outdir ./dist --target bun"
   },
   "dependencies": {
     "@hono/zod-openapi": "^1.1.0",
+    "@prisma/client": "^6.16.1",
     "@scalar/express-api-reference": "^0.8.18",
     "@scalar/hono-api-reference": "^0.9.18",
     "hono": "^4.9.6",

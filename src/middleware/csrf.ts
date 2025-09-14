@@ -1,5 +1,5 @@
 // customCSRF.ts
-import { Context } from "hono";
+import { Context, Next } from "hono";
 import { getCookie } from "hono/cookie";
 
 // Daftar domain yang diizinkan
@@ -8,15 +8,7 @@ const allowedOrigins = [
   "http://localhost:3000",
 ];
 
-// Validasi origin
-const originValidator = (origin: string) => {
-  console.log("Validating origin:", origin); // Ini akan muncul di console saat test dijalankan
-  if (allowedOrigins.includes(origin)) return true;
-  if (origin && origin.startsWith("chrome-extension://")) return true;
-  return false;
-};
-
-export const customCSRF = async (c: Context, next: Function) => {
+export const customCSRF = async (c: Context, next: Next) => {
   const allowedMethods = ["GET", "HEAD", "OPTIONS"];
   const method = c.req.method;
   const origin = c.req.header("Origin");
